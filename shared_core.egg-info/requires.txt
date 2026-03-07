@@ -1,0 +1,11 @@
+pydantic-settings
+sqlalchemy>=2.0.0
+aiomysql
+aiosqlite
+asyncpg
+httpx
+gmqtt
+fastapi
+python-jose[cryptography]
+argon2-cffi
+cryptography

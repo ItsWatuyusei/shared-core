@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shared_core"
+version = "0.1.0"
+description = "Common infrastructure and logic for LicensePanel ecosystem"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pydantic-settings",
+    "sqlalchemy>=2.0.0",
+    "aiomysql",
+    "aiosqlite",
+    "asyncpg",
+    "httpx",
+    "gmqtt",
+    "fastapi",
+    "python-jose[cryptography]",
+    "argon2-cffi",
+    "cryptography"
+]
+
+[tool.setuptools]
+packages = ["shared_core"]
+
+[tool.setuptools.package-dir]
+shared_core = "."
