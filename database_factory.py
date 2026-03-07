@@ -81,7 +81,7 @@ class BaseConnectionFactory:
                 # We map it to 'sqlite' and rely on the 'creator' passed in engine_kwargs.
                 # We use 'sqlite:///libsql_connection' as a dummy valid URL to satisfy SQLAlchemy's validation.
                 sqlalchemy_url = target_url
-                if not is_async and target_url.startswith("libsql://"):
+                if not is_async and ("libsql" in target_url or ".turso.io" in target_url):
                     sqlalchemy_url = "sqlite:///libsql_connection"
                 
                 if is_async:
