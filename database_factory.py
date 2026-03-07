@@ -77,9 +77,7 @@ class BaseConnectionFactory:
                 engine_kwargs.pop("connect_args", None)
 
             try:
-                # SQLAlchemy doesn't have a native 'libsql' dialect. 
-                # We map it to 'sqlite' and rely on the 'creator' passed in engine_kwargs.
-                # We use 'sqlite:///libsql_connection' as a dummy valid URL to satisfy SQLAlchemy's validation.
+
                 sqlalchemy_url = target_url
                 if not is_async and ("libsql" in target_url or ".turso.io" in target_url):
                     sqlalchemy_url = "sqlite:///libsql_connection"
