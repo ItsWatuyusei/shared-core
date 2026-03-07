@@ -126,8 +126,8 @@ class BaseConnectionFactory:
         driver = ""
         if "mysql" in target_url or "mariadb" in target_url: driver = "mysql"
         elif "postgres" in target_url or "pgsql" in target_url: driver = "pgsql"
+        elif "libsql" in target_url or ".turso.io" in target_url: driver = "libsql"
         elif "sqlite" in target_url: driver = "sqlite"
-        elif "libsql" in target_url: driver = "libsql"
 
         try:
             if driver == "mysql":
