@@ -56,11 +56,9 @@ class BaseNotificationService:
             text += "\n<b>Details:</b>\n" + "\n".join([f"• <b>{k}:</b> {v}" for k, v in details.items()])
         
         payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
-        
-        # Hardcoded fallback IPs for api.telegram.org
+
         fallback_ips = ["149.154.167.220", "149.154.167.99"]
-        
-        # Try hostname first, then fallback IPs if resolution fails
+
         endpoints = ["https://api.telegram.org"] + [f"https://{ip}" for ip in fallback_ips]
         
         for base_url in endpoints:
@@ -68,19 +66,16 @@ class BaseNotificationService:
             headers = {"Host": "api.telegram.org"} if "telegram.org" not in base_url else {}
             
             try:
-                # We use verify=False only for IP-based fallbacks if needed, 
-                # but better to keep it True and rely on Host header if httpx supports it
-                # Actually httpx doesn't easily support SNI with IP out of the box without custom transport
-                # So we just try to be resilient with retries first
+
                 resp = await self._client.post(url, json=payload, headers=headers)
                 if resp.status_code == 200:
                     return True
                 logger.warning(f"[BaseNotification] Telegram {base_url} returned {resp.status_code}: {resp.text}")
             except Exception as e:
                 logger.debug(f"[BaseNotification] Telegram attempt {base_url} failed: {e}")
-                if base_url == endpoints[0]: # If the hostname failed, we continue to IPs
+                if base_url == endpoints[0]: 
                     continue
-                break # If IPs also fail or we finished, stop
+                break 
         
         logger.error(f"[BaseNotification] Telegram failed after trying all endpoints.")
         return False

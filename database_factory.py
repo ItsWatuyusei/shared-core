@@ -155,6 +155,7 @@ class BaseConnectionFactory:
                 import aiosqlite
                 path = parsed.path.lstrip('/') or "suite.sqlite"
                 conn = await aiosqlite.connect(path, timeout=30, check_same_thread=False)
+                conn.row_factory = aiosqlite.Row
                 return conn
 
             elif driver == "libsql":
