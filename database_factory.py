@@ -78,11 +78,11 @@ class BaseConnectionFactory:
 
             try:
                 # SQLAlchemy doesn't have a native 'libsql' dialect. 
-                # We map it to 'sqlite' and rely on the 'creator' passed in engine_kwargs
-                # or the installed 'sqlalchemy-libsql' plugin.
+                # We map it to 'sqlite' and rely on the 'creator' passed in engine_kwargs.
+                # We use 'sqlite:///libsql_connection' as a dummy valid URL to satisfy SQLAlchemy's validation.
                 sqlalchemy_url = target_url
                 if not is_async and target_url.startswith("libsql://"):
-                    sqlalchemy_url = target_url.replace("libsql://", "sqlite://", 1)
+                    sqlalchemy_url = "sqlite:///libsql_connection"
                 
                 if is_async:
                     engine = create_async_engine(sqlalchemy_url, **engine_kwargs)
