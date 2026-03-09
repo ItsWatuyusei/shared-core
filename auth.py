@@ -49,7 +49,7 @@ class BaseAuthService:
         Strategic definition of a Platform Administrator.
         Must have an administrative role and operate in the Master/Root context (tenant_id is None).
         """
-        is_admin_role = role in ["platform_admin", "admin"]
+        is_admin_role = role in ["SuperAdmin", "platform_admin", "admin"]
         is_global_scope = tenant_id is None or str(tenant_id).lower() in ["none", "master", "0"]
         return is_admin_role and is_global_scope
 

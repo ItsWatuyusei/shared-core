@@ -131,13 +131,38 @@ class BaseConnectionFactory:
             if driver == "mysql":
                 import aiomysql
                 import ssl
+                db_name = parsed.path.lstrip('/')
+                
+                if db_name:
+                    try:
+                        conn_args = {
+                            "host": parsed.hostname,
+                            "user": parsed.username,
+                            "password": parsed.password,
+                            "port": parsed.port or 3306,
+                            "autocommit": True,
+                            "charset": "utf8mb4"
+                        }
+                        if self.settings.DB_SSL:
+                            ssl_ctx = ssl.create_default_context()
+                            if self.settings.DB_SSL_CA: ssl_ctx.load_verify_locations(self.settings.DB_SSL_CA)
+                            conn_args["ssl"] = ssl_ctx
+                        
+                        tmp_conn = await aiomysql.connect(**conn_args)
+                        async with tmp_conn.cursor() as cur:
+                            await cur.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`")
+                        tmp_conn.close()
+                    except Exception as db_err:
+                        logger.warning(f"[DatabaseFactory] Could not ensure database '{db_name}' exists: {db_err}")
+
                 cfg = {
                     "host": parsed.hostname,
                     "user": parsed.username,
                     "password": parsed.password,
                     "port": parsed.port or 3306,
-                    "db": parsed.path.lstrip('/'),
+                    "db": db_name,
                     "autocommit": True,
+                    "charset": "utf8mb4",
                     "minsize": 5,
                     "maxsize": kwargs.get("maxsize", self.settings.DB_POOL_SIZE)
                 }
