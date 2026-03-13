@@ -1,5 +1,4 @@
-# ItsWatuyusei
-# Copyright © ItsWatuyusei (https://ItsWatuyusei.com)
+
 
 import pytest
 import asyncio

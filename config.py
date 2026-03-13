@@ -1,5 +1,3 @@
-# ItsWatuyusei
-# Copyright © ItsWatuyusei (https://ItsWatuyusei.com)
 
 
 from pydantic_settings import BaseSettings, SettingsConfigDict

@@ -1,5 +1,4 @@
-# ItsWatuyusei
-# Copyright © ItsWatuyusei (https://ItsWatuyusei.com)
+
 
 from typing import Protocol, Dict, Any, Optional
 
