@@ -6,7 +6,7 @@ from shared_core.mqtt import BaseMQTTClient
 
 @pytest.mark.asyncio
 async def test_base_notification_service_discord():
-    """Verify that BaseNotificationService correctly sends to Discord (Mocked)"""
+    
     mock_client = AsyncMock()
     mock_resp = AsyncMock()
     mock_resp.status_code = 204
@@ -28,7 +28,7 @@ async def test_base_notification_service_discord():
 
 @pytest.mark.asyncio
 async def test_base_notification_service_telegram():
-    """Verify that BaseNotificationService correctly sends to Telegram (Mocked)"""
+    
     mock_client = AsyncMock()
     mock_resp = AsyncMock()
     mock_resp.status_code = 200
@@ -50,7 +50,7 @@ async def test_base_notification_service_telegram():
 
 @pytest.mark.asyncio
 async def test_base_mqtt_client_initialization():
-    """Verify BaseMQTTClient initializes and holds config correctly"""
+    
     client = BaseMQTTClient(
         broker="localhost", 
         port=1883, 
@@ -65,7 +65,7 @@ async def test_base_mqtt_client_initialization():
 
 @pytest.mark.asyncio
 async def test_base_mqtt_client_connection_flow():
-    """Test the connection singleton logic (Mocked gmqtt)"""
+    
     with patch("shared_core.mqtt.MQTTClient") as MockMQTT:
         mock_instance = MockMQTT.return_value
         mock_instance.is_connected = False
@@ -79,7 +79,7 @@ async def test_base_mqtt_client_connection_flow():
 
 @pytest.mark.asyncio
 async def test_base_database_factory_health_check():
-    """Verify that check_health correctly identifies connectivity status"""
+    
     from shared_core.database_factory import BaseConnectionFactory
     from shared_core.config import BaseInfraSettings
     
@@ -102,7 +102,7 @@ async def test_base_database_factory_health_check():
 
 @pytest.mark.asyncio
 async def test_database_factory_singleton_engines():
-    """Verify that multiple requests for the same URL return the same engine instance"""
+    
     from shared_core.database_factory import BaseConnectionFactory
     from shared_core.config import BaseInfraSettings
     

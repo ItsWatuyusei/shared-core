@@ -7,10 +7,7 @@ from typing import Optional, Dict, Any
 logger = logging.getLogger(__name__)
 
 class BaseNotificationService:
-    """
-    Common notification logic for Discord and Telegram.
-    Can be used by composition in ApiLicense and Core.
-    """
+    
     def __init__(self, http_client: Optional[httpx.AsyncClient] = None):
         self._client = http_client or httpx.AsyncClient(timeout=30)
 

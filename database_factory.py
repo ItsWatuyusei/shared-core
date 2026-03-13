@@ -18,10 +18,7 @@ from .exceptions import DatabaseConfigurationError
 logger = logging.getLogger(__name__)
 
 class BaseConnectionFactory:
-    """
-    Factory to manage and cache database engines/pools centrally.
-    Supports both AsyncEngine and standard Engine (for sync-only drivers like LibSQL).
-    """
+    
     def __init__(self, settings: BaseInfraSettings):
         self.settings = settings
         self._engines: Dict[str, Any] = {}
@@ -35,7 +32,7 @@ class BaseConnectionFactory:
             raise DatabaseConfigurationError(f"Malformed database URL: '{url}'. Missing protocol.")
 
     def is_async_url(self, url: str) -> bool:
-        """Detects if the URL requires an async driver."""
+        
         if "libsql" in url: return False
         if url.startswith("sqlite") and "aiosqlite" not in url: return False
         return True
@@ -111,10 +108,7 @@ class BaseConnectionFactory:
             return False
 
     async def get_raw_pool(self, url: Optional[str] = None, **kwargs) -> Any:
-        """
-        Returns a raw connection pool for the specified database driver.
-        Useful for legacy/raw-sql modules like ApiLicense.
-        """
+        
         target_url = url or self.settings.DATABASE_URL
         self._validate_url(target_url)
 

@@ -9,10 +9,7 @@ from gmqtt import Client as MQTTClient
 logger = logging.getLogger(__name__)
 
 class BaseMQTTClient:
-    """
-    Base client for MQTT operations using gmqtt.
-    Designed for composition.
-    """
+    
     def __init__(self, broker: str, port: int, user: Optional[str] = None, password: Optional[str] = None, client_id_prefix: str = "Client"):
         self.broker = broker
         self.port = port
@@ -23,7 +20,7 @@ class BaseMQTTClient:
         self._lock = asyncio.Lock()
 
     async def get_client(self, on_message_handler: Any) -> Optional[MQTTClient]:
-        """Gets or creates the MQTT client."""
+        
         if self._client and self._client.is_connected:
             return self._client
 
@@ -59,7 +56,7 @@ class BaseMQTTClient:
                 return None
 
     async def broadcast(self, topic: str, payload: str) -> None:
-        """Broadcasts a payload to a topic."""
+        
         try:
 
             pass 
