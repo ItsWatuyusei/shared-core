@@ -1,3 +1,6 @@
+# ItsWatuyusei
+# Copyright © ItsWatuyusei (https://ItsWatuyusei.com)
+
 import pytest
 import asyncio
 from unittest.mock import AsyncMock, patch
@@ -6,12 +9,12 @@ from shared_core.mqtt import BaseMQTTClient
 
 @pytest.mark.asyncio
 async def test_base_notification_service_discord():
-    
+
     mock_client = AsyncMock()
     mock_resp = AsyncMock()
     mock_resp.status_code = 204
     mock_client.post.return_value = mock_resp
-    
+
     service = BaseNotificationService(http_client=mock_client)
     success = await service._send_to_discord(
         webhook_url="http://mock-discord.com",
@@ -19,7 +22,7 @@ async def test_base_notification_service_discord():
         message="Integration test message",
         details={"status": "working"}
     )
-    
+
     assert success is True
     assert mock_client.post.called
     args, kwargs = mock_client.post.call_args
@@ -28,12 +31,12 @@ async def test_base_notification_service_discord():
 
 @pytest.mark.asyncio
 async def test_base_notification_service_telegram():
-    
+
     mock_client = AsyncMock()
     mock_resp = AsyncMock()
     mock_resp.status_code = 200
     mock_client.post.return_value = mock_resp
-    
+
     service = BaseNotificationService(http_client=mock_client)
     success = await service._send_to_telegram(
         token="bot123",
@@ -41,7 +44,7 @@ async def test_base_notification_service_telegram():
         event_type="success",
         message="Bot is online"
     )
-    
+
     assert success is True
     assert mock_client.post.called
     args, kwargs = mock_client.post.call_args
@@ -50,12 +53,12 @@ async def test_base_notification_service_telegram():
 
 @pytest.mark.asyncio
 async def test_base_mqtt_client_initialization():
-    
+
     client = BaseMQTTClient(
-        broker="localhost", 
-        port=1883, 
-        user="user", 
-        password="pass", 
+        broker="localhost",
+        port=1883,
+        user="user",
+        password="pass",
         client_id_prefix="Test"
     )
     assert client.broker == "localhost"
@@ -65,12 +68,12 @@ async def test_base_mqtt_client_initialization():
 
 @pytest.mark.asyncio
 async def test_base_mqtt_client_connection_flow():
-    
+
     with patch("shared_core.mqtt.MQTTClient") as MockMQTT:
         mock_instance = MockMQTT.return_value
         mock_instance.is_connected = False
         mock_instance.connect = AsyncMock()
-        
+
         client = BaseMQTTClient("localhost", 1883)
 
         mqtt_c = await client.get_client(on_message_handler=lambda x: x)
@@ -79,10 +82,10 @@ async def test_base_mqtt_client_connection_flow():
 
 @pytest.mark.asyncio
 async def test_base_database_factory_health_check():
-    
+
     from shared_core.database_factory import BaseConnectionFactory
     from shared_core.config import BaseInfraSettings
-    
+
     settings = BaseInfraSettings(
         DATABASE_URL="sqlite+aiosqlite:///:memory:",
         CSRF_SECRET="test",
@@ -90,7 +93,7 @@ async def test_base_database_factory_health_check():
         INFRA_ADMIN_KEY="test",
         INFRA_CORE_KEY="test"
     )
-    
+
     factory = BaseConnectionFactory(settings)
 
     is_healthy = await factory.check_health()
@@ -102,10 +105,10 @@ async def test_base_database_factory_health_check():
 
 @pytest.mark.asyncio
 async def test_database_factory_singleton_engines():
-    
+
     from shared_core.database_factory import BaseConnectionFactory
     from shared_core.config import BaseInfraSettings
-    
+
     settings = BaseInfraSettings(
         DATABASE_URL="sqlite+aiosqlite:///:memory:",
         CSRF_SECRET="test",
@@ -114,9 +117,9 @@ async def test_database_factory_singleton_engines():
         INFRA_CORE_KEY="test"
     )
     factory = BaseConnectionFactory(settings)
-    
+
     engine1 = await factory.get_engine()
     engine2 = await factory.get_engine()
-    
+
     assert engine1 is engine2
     await factory.close_all()

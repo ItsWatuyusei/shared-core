@@ -1,3 +1,6 @@
+# ItsWatuyusei
+# Copyright © ItsWatuyusei (https://ItsWatuyusei.com)
+
 import logging
 import asyncio
 from typing import Dict, Any, Optional
@@ -18,7 +21,7 @@ from .exceptions import DatabaseConfigurationError
 logger = logging.getLogger(__name__)
 
 class BaseConnectionFactory:
-    
+
     def __init__(self, settings: BaseInfraSettings):
         self.settings = settings
         self._engines: Dict[str, Any] = {}
@@ -32,7 +35,7 @@ class BaseConnectionFactory:
             raise DatabaseConfigurationError(f"Malformed database URL: '{url}'. Missing protocol.")
 
     def is_async_url(self, url: str) -> bool:
-        
+
         if "libsql" in url: return False
         if url.startswith("sqlite") and "aiosqlite" not in url: return False
         return True
@@ -61,7 +64,7 @@ class BaseConnectionFactory:
                 engine_kwargs["poolclass"] = QueuePool
                 engine_kwargs["pool_size"] = kwargs.get("pool_size", 10)
                 engine_kwargs["max_overflow"] = kwargs.get("max_overflow", 5)
-                
+
                 if "check_same_thread" not in engine_kwargs["connect_args"]:
                     engine_kwargs["connect_args"]["check_same_thread"] = False
             else:
@@ -70,7 +73,7 @@ class BaseConnectionFactory:
 
             if "creator" in kwargs:
                 engine_kwargs["creator"] = kwargs["creator"]
-                
+
                 engine_kwargs.pop("connect_args", None)
 
             try:
@@ -78,12 +81,12 @@ class BaseConnectionFactory:
                 sqlalchemy_url = target_url
                 if not is_async and ("libsql" in target_url or ".turso.io" in target_url):
                     sqlalchemy_url = "sqlite:///libsql_connection"
-                
+
                 if is_async:
                     engine = create_async_engine(sqlalchemy_url, **engine_kwargs)
                 else:
                     engine = create_engine(sqlalchemy_url, **engine_kwargs)
-                
+
                 self._engines[target_url] = engine
                 logger.info(f"[DatabaseFactory] Engine created ({'Async' if is_async else 'Sync'}) for {target_url.split('@')[-1] if '@' in target_url else 'local db'}")
                 return engine
@@ -108,13 +111,13 @@ class BaseConnectionFactory:
             return False
 
     async def get_raw_pool(self, url: Optional[str] = None, **kwargs) -> Any:
-        
+
         target_url = url or self.settings.DATABASE_URL
         self._validate_url(target_url)
 
         from urllib.parse import urlparse
         parsed = urlparse(target_url.replace("tidb://", "mysql://").replace("+aiomysql", "").replace("+asyncpg", ""))
-        
+
         driver = ""
         if "mysql" in target_url or "mariadb" in target_url: driver = "mysql"
         elif "postgres" in target_url or "pgsql" in target_url: driver = "pgsql"
@@ -126,7 +129,7 @@ class BaseConnectionFactory:
                 import aiomysql
                 import ssl
                 db_name = parsed.path.lstrip('/')
-                
+
                 if db_name:
                     try:
                         conn_args = {
@@ -141,7 +144,7 @@ class BaseConnectionFactory:
                             ssl_ctx = ssl.create_default_context()
                             if self.settings.DB_SSL_CA: ssl_ctx.load_verify_locations(self.settings.DB_SSL_CA)
                             conn_args["ssl"] = ssl_ctx
-                        
+
                         tmp_conn = await aiomysql.connect(**conn_args)
                         async with tmp_conn.cursor() as cur:
                             await cur.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`")

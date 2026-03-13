@@ -1,3 +1,6 @@
+# ItsWatuyusei
+# Copyright © ItsWatuyusei (https://ItsWatuyusei.com)
+
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
@@ -29,4 +32,3 @@ class BaseInfraSettings(BaseSettings):
         extra="ignore",
         case_sensitive=True
     )
-

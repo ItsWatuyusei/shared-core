@@ -1,3 +1,6 @@
+# ItsWatuyusei
+# Copyright © ItsWatuyusei (https://ItsWatuyusei.com)
+
 import logging
 from typing import Any, Optional, Type, Protocol
 from sqlalchemy import select, func
@@ -7,7 +10,7 @@ from fastapi import HTTPException
 logger = logging.getLogger(__name__)
 
 class BaseTenantService:
-    
+
     def __init__(self, tenant_model: Type, log_model: Type, cache_service: Any = None):
         self.tenant_model = tenant_model
         self.log_model = log_model
@@ -21,14 +24,14 @@ class BaseTenantService:
         if not tenant:
             stmt = select(self.tenant_model).filter(func.lower(self.tenant_model.domain) == str(identifier).lower())
             tenant = (await db.execute(stmt)).scalars().first()
-            
+
         if not tenant:
             raise HTTPException(status_code=404, detail=f"Tenant '{identifier}' not found.")
-            
+
         return tenant
 
     async def log_action(self, db: AsyncSession, tenant_id: Any, action: str, message: str, status: str = "SUCCESS"):
-        
+
         try:
             log_entry = self.log_model(
                 tenant_id=tenant_id,
@@ -42,7 +45,7 @@ class BaseTenantService:
             logger.error(f"Failed to log tenant action: {e}")
 
     async def invalidate_cache(self, tenant_id: Any):
-        
+
         if self.cache and hasattr(self.cache, "invalidate_tenant"):
             try:
                 self.cache.invalidate_tenant(tenant_id)
