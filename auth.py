@@ -39,9 +39,8 @@ class BaseAuthService:
             )
         return True
 
-    def is_platform_admin(self, role: str, tenant_id: Optional[Any] = None) -> bool:
-
-        is_admin_role = role in ["SuperAdmin", "platform_admin", "admin"]
+    def is_super_admin(self, role: str, tenant_id: Optional[Any] = None) -> bool:
+        is_admin_role = (role or "").lower() in ["superadmin", "admin"]
         is_global_scope = tenant_id is None or str(tenant_id).lower() in ["none", "master", "0"]
         return is_admin_role and is_global_scope
 
