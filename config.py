@@ -24,7 +24,7 @@ class BaseInfraSettings(BaseSettings):
     MQTT_PORT: int = 1883
     MQTT_USER: Optional[str] = None
     MQTT_PASSWORD: Optional[str] = None
-    REDIS_URL: str = "redis://localhost:6379"
+    REDIS_URL: str = "redis://127.0.0.1:6379"
 
     model_config = SettingsConfigDict(
         env_file=".env",
