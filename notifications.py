@@ -34,10 +34,12 @@ class BaseNotificationService:
                 embed["fields"].append({"name": k, "value": str(v), "inline": True})
 
         try:
-            resp = await self._client.post(webhook_url, json={"embeds": [embed]})
+            resp = await self._client.post(webhook_url, json={"embeds": [embed]}, timeout=15.0)
+            if resp.status_code >= 400:
+                logger.error(f"[BaseNotification] Discord error {resp.status_code}: {resp.text}")
             return resp.status_code < 400
         except Exception as e:
-            logger.error(f"[BaseNotification] Discord failed: {e}")
+            logger.error(f"[BaseNotification] Discord critical failure: {str(e)}")
             return False
 
     async def _send_to_telegram(
@@ -61,20 +63,23 @@ class BaseNotificationService:
         endpoints = ["https://api.telegram.org"] + [f"https://{ip}" for ip in fallback_ips]
 
         for base_url in endpoints:
+            is_ip = any(ip in base_url for ip in fallback_ips)
             url = f"{base_url}/bot{token}/sendMessage"
-            headers = {"Host": "api.telegram.org"} if "telegram.org" not in base_url else {}
+            headers = {"Host": "api.telegram.org", "User-Agent": "ItsWatuyusei-Suite/3.0"} if is_ip else {"User-Agent": "ItsWatuyusei-Suite/3.0"}
 
             try:
-
-                resp = await self._client.post(url, json=payload, headers=headers)
+                # Si usamos IP directa, deshabilitamos verificación SSL porque el certificado es para el dominio, no la IP
+                verify_ssl = not is_ip 
+                resp = await self._client.post(url, json=payload, headers=headers, timeout=12.0, follow_redirects=True, verify=verify_ssl)
+                
                 if resp.status_code == 200:
                     return True
                 logger.warning(f"[BaseNotification] Telegram {base_url} returned {resp.status_code}: {resp.text}")
             except Exception as e:
-                logger.debug(f"[BaseNotification] Telegram attempt {base_url} failed: {e}")
-                if base_url == endpoints[0]:
+                logger.debug(f"[BaseNotification] Telegram attempt {base_url} failed: {str(e)}")
+                if not is_ip: # Solo reintentamos con IPs si falló el dominio principal
                     continue
                 break
 
-        logger.error(f"[BaseNotification] Telegram failed after trying all endpoints.")
+        logger.error(f"[BaseNotification] Telegram all attempts failed.")
         return False
