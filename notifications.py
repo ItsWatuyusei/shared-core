@@ -68,7 +68,7 @@ class BaseNotificationService:
             headers = {"Host": "api.telegram.org", "User-Agent": "ItsWatuyusei-Suite/3.0"} if is_ip else {"User-Agent": "ItsWatuyusei-Suite/3.0"}
 
             try:
-                # Si usamos IP directa, deshabilitamos verificación SSL porque el certificado es para el dominio, no la IP
+                
                 verify_ssl = not is_ip 
                 resp = await self._client.post(url, json=payload, headers=headers, timeout=12.0, follow_redirects=True, verify=verify_ssl)
                 
@@ -77,7 +77,7 @@ class BaseNotificationService:
                 logger.warning(f"[BaseNotification] Telegram {base_url} returned {resp.status_code}: {resp.text}")
             except Exception as e:
                 logger.debug(f"[BaseNotification] Telegram attempt {base_url} failed: {str(e)}")
-                if not is_ip: # Solo reintentamos con IPs si falló el dominio principal
+                if not is_ip: 
                     continue
                 break
 
