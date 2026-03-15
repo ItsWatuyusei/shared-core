@@ -16,6 +16,7 @@ class BaseInfraSettings(BaseSettings):
     INFRA_ADMIN_KEY: str = "default_admin_key"
     INFRA_CORE_KEY: str = "default_core_key"
     HF_ACCESS_TOKEN: Optional[str] = None
+    EXTERNAL_TOKEN: Optional[str] = None
     TELEGRAM_BOT_TOKEN: Optional[str] = None
     TELEGRAM_CHAT_ID: Optional[str] = None
     DISCORD_WEBHOOK_URL: Optional[str] = None
