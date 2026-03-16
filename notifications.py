@@ -42,6 +42,9 @@ class BaseNotificationService:
             logger.error(f"[BaseNotification] Discord critical failure: {str(e)}")
             return False
 
+    def _escape_html(self, text: str) -> str:
+        return str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
     async def _send_to_telegram(
         self,
         token: str,
@@ -52,9 +55,17 @@ class BaseNotificationService:
         prefix: str = "Suite"
     ) -> bool:
         emojis = {"error": "🚨", "critical": "🚨", "success": "✅", "warning": "⚠️", "info": "ℹ️"}
-        text = f"{emojis.get(event_type.lower(), '🔔')} <b>{prefix}: {event_type.upper()}</b>\n\n{message}\n"
+        safe_msg = self._escape_html(message)
+        text = f"{emojis.get(event_type.lower(), '🔔')} <b>{prefix}: {event_type.upper()}</b>\n\n{safe_msg}\n"
         if details:
-            text += "\n<b>Details:</b>\n" + "\n".join([f"• <b>{k}:</b> {v}" for k, v in details.items()])
+            text += "\n<b>Details:</b>\n"
+            for k, v in details.items():
+                safe_k = self._escape_html(k)
+                safe_v = self._escape_html(v)
+                text += f"• <b>{safe_k}:</b> {safe_v}\n"
+
+        if len(text) > 4000:
+            text = text[:3997] + "..."
 
         payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
 
