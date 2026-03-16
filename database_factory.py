@@ -160,7 +160,8 @@ class BaseConnectionFactory:
                     "autocommit": True,
                     "charset": "utf8mb4",
                     "minsize": 5,
-                    "maxsize": kwargs.get("maxsize", self.settings.DB_POOL_SIZE)
+                    "maxsize": kwargs.get("maxsize", self.settings.DB_POOL_SIZE),
+                    "pool_recycle": 1800
                 }
                 if self.settings.DB_SSL:
                     ssl_ctx = ssl.create_default_context()
