@@ -178,7 +178,7 @@ class BaseConnectionFactory:
                     "maxsize": kwargs.get("maxsize", self.settings.DB_POOL_SIZE),
                     "pool_recycle": 1800,
                     "ssl": ssl_ctx,
-                    "connect_timeout": 30 # Avoid hanging in "starting"
+                    "connect_timeout": 30 
                 }
                 return await aiomysql.create_pool(**cfg)
 
