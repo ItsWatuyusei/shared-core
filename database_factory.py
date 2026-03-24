@@ -57,8 +57,8 @@ class BaseConnectionFactory:
                 "pool_pre_ping": kwargs.get("pool_pre_ping", True),
                 "pool_recycle": kwargs.get("pool_recycle", 300),
                 "connect_args": kwargs.get("connect_args", {}),
-                "pool_timeout": kwargs.get("pool_timeout", 30), 
-                "connect_timeout": kwargs.get("connect_timeout", 10) 
+                "pool_timeout": kwargs.get("pool_timeout", 60),
+                "connect_timeout": kwargs.get("connect_timeout", 30)
             }
 
             if "mysql" in target_url or "tidb" in target_url:
@@ -75,7 +75,7 @@ class BaseConnectionFactory:
                     if ca_path:
                         import ssl
                         engine_kwargs["connect_args"]["ssl"] = ssl.create_default_context(cafile=ca_path)
-                        engine_kwargs["connect_args"]["ssl"].check_hostname = False 
+                        engine_kwargs["connect_args"]["ssl"].check_hostname = False
                     else:
                         engine_kwargs["connect_args"]["ssl"] = True
 
@@ -174,11 +174,11 @@ class BaseConnectionFactory:
                     "db": db_name,
                     "autocommit": True,
                     "charset": "utf8mb4",
-                    "minsize": 2, 
+                    "minsize": 2,
                     "maxsize": kwargs.get("maxsize", self.settings.DB_POOL_SIZE),
                     "pool_recycle": 1800,
                     "ssl": ssl_ctx,
-                    "connect_timeout": 10 
+                    "connect_timeout": 30 # Avoid hanging in "starting"
                 }
                 return await aiomysql.create_pool(**cfg)
 
