@@ -56,8 +56,28 @@ class BaseConnectionFactory:
             engine_kwargs = {
                 "pool_pre_ping": kwargs.get("pool_pre_ping", True),
                 "pool_recycle": kwargs.get("pool_recycle", 300),
-                "connect_args": kwargs.get("connect_args", {})
+                "connect_args": kwargs.get("connect_args", {}),
+                "pool_timeout": kwargs.get("pool_timeout", 30), 
+                "connect_timeout": kwargs.get("connect_timeout", 10) 
             }
+
+            if "mysql" in target_url or "tidb" in target_url:
+                if self.settings.DB_SSL or "tidb" in target_url:
+                    ca_path = self.settings.DB_SSL_CA
+                    if not ca_path:
+                        import os
+                        import certifi
+                        ca_path = certifi.where()
+                        for path in ["/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/cert.pem"]:
+                            if os.path.exists(path):
+                                ca_path = path
+                                break
+                    if ca_path:
+                        import ssl
+                        engine_kwargs["connect_args"]["ssl"] = ssl.create_default_context(cafile=ca_path)
+                        engine_kwargs["connect_args"]["ssl"].check_hostname = False 
+                    else:
+                        engine_kwargs["connect_args"]["ssl"] = True
 
             if "sqlite" in target_url or "libsql" in target_url:
                 engine_kwargs["poolclass"] = QueuePool
@@ -127,29 +147,24 @@ class BaseConnectionFactory:
             if driver == "mysql":
                 import aiomysql
                 import ssl
+                import os
                 db_name = parsed.path.lstrip('/')
 
-                if db_name:
-                    try:
-                        conn_args = {
-                            "host": parsed.hostname,
-                            "user": parsed.username,
-                            "password": parsed.password,
-                            "port": parsed.port or 3306,
-                            "autocommit": True,
-                            "charset": "utf8mb4"
-                        }
-                        if self.settings.DB_SSL:
-                            ssl_ctx = ssl.create_default_context()
-                            if self.settings.DB_SSL_CA: ssl_ctx.load_verify_locations(self.settings.DB_SSL_CA)
-                            conn_args["ssl"] = ssl_ctx
-
-                        tmp_conn = await aiomysql.connect(**conn_args)
-                        async with tmp_conn.cursor() as cur:
-                            await cur.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`")
-                        tmp_conn.close()
-                    except Exception as db_err:
-                        logger.warning(f"[DatabaseFactory] Could not ensure database '{db_name}' exists: {db_err}")
+                ssl_ctx = None
+                if self.settings.DB_SSL or "tidb" in target_url:
+                    ssl_ctx = ssl.create_default_context()
+                    ca_path = self.settings.DB_SSL_CA
+                    if not ca_path:
+                        import certifi
+                        ca_path = certifi.where()
+                        for path in ["/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/cert.pem"]:
+                            if os.path.exists(path):
+                                ca_path = path
+                                break
+                    if ca_path:
+                        ssl_ctx.load_verify_locations(ca_path)
+                    else:
+                        ssl_ctx.check_hostname = False
 
                 cfg = {
                     "host": parsed.hostname,
@@ -159,14 +174,12 @@ class BaseConnectionFactory:
                     "db": db_name,
                     "autocommit": True,
                     "charset": "utf8mb4",
-                    "minsize": 5,
+                    "minsize": 2, 
                     "maxsize": kwargs.get("maxsize", self.settings.DB_POOL_SIZE),
-                    "pool_recycle": 1800
+                    "pool_recycle": 1800,
+                    "ssl": ssl_ctx,
+                    "connect_timeout": 10 
                 }
-                if self.settings.DB_SSL:
-                    ssl_ctx = ssl.create_default_context()
-                    if self.settings.DB_SSL_CA: ssl_ctx.load_verify_locations(self.settings.DB_SSL_CA)
-                    cfg["ssl"] = ssl_ctx
                 return await aiomysql.create_pool(**cfg)
 
             elif driver == "pgsql":
