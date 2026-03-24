@@ -1,5 +1,3 @@
-
-
 import logging
 import asyncio
 from typing import Dict, Any, Optional
@@ -14,10 +12,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 from sqlalchemy.pool import QueuePool
-from .config import BaseInfraSettings
-from .exceptions import DatabaseConfigurationError
-
-logger = logging.getLogger(__name__)
 
 class BaseConnectionFactory:
 
@@ -34,7 +28,6 @@ class BaseConnectionFactory:
             raise DatabaseConfigurationError(f"Malformed database URL: '{url}'. Missing protocol.")
 
     def is_async_url(self, url: str) -> bool:
-
         if "libsql" in url: return False
         if url.startswith("sqlite") and "aiosqlite" not in url: return False
         return True
@@ -92,11 +85,9 @@ class BaseConnectionFactory:
 
             if "creator" in kwargs:
                 engine_kwargs["creator"] = kwargs["creator"]
-
                 engine_kwargs.pop("connect_args", None)
 
             try:
-
                 sqlalchemy_url = target_url
                 if not is_async and ("libsql" in target_url or ".turso.io" in target_url):
                     sqlalchemy_url = "sqlite:///libsql_connection"
@@ -130,10 +121,8 @@ class BaseConnectionFactory:
             return False
 
     async def get_raw_pool(self, url: Optional[str] = None, **kwargs) -> Any:
-
         target_url = url or self.settings.DATABASE_URL
         self._validate_url(target_url)
-
         from urllib.parse import urlparse
         parsed = urlparse(target_url.replace("tidb://", "mysql://").replace("+aiomysql", "").replace("+asyncpg", ""))
 
@@ -149,7 +138,6 @@ class BaseConnectionFactory:
                 import ssl
                 import os
                 db_name = parsed.path.lstrip('/')
-
                 ssl_ctx = None
                 if self.settings.DB_SSL or "tidb" in target_url:
                     ssl_ctx = ssl.create_default_context()
@@ -166,6 +154,34 @@ class BaseConnectionFactory:
                     else:
                         ssl_ctx.check_hostname = False
 
+                if db_name:
+                    try:
+                        conn_args = {
+                            "host": parsed.hostname,
+                            "user": parsed.username,
+                            "password": parsed.password,
+                            "port": parsed.port or 4000,
+                            "autocommit": True,
+                            "charset": "utf8mb4",
+                            "ssl": ssl_ctx,
+                            "connect_timeout": 30
+                        }
+                        try:
+                            test_conn = await aiomysql.connect(db=db_name, **conn_args)
+                            test_conn.close()
+                        except Exception:
+                            for sys_db in ["test", "mysql", None]:
+                                try:
+                                    logger.info(f"[DatabaseFactory] Attempting to create database '{db_name}' via '{sys_db or 'ROOT'}'...")
+                                    tmp_conn = await aiomysql.connect(db=sys_db, **conn_args)
+                                    async with tmp_conn.cursor() as cur:
+                                        await cur.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}`")
+                                    tmp_conn.close()
+                                    break
+                                except: continue
+                    except Exception as db_err:
+                        logger.warning(f"[DatabaseFactory] DB discovery warning: {db_err}")
+
                 cfg = {
                     "host": parsed.hostname,
                     "user": parsed.username,
@@ -178,26 +194,23 @@ class BaseConnectionFactory:
                     "maxsize": kwargs.get("maxsize", self.settings.DB_POOL_SIZE),
                     "pool_recycle": 1800,
                     "ssl": ssl_ctx,
-                    "connect_timeout": 30 
+                    "connect_timeout": 30
                 }
                 return await aiomysql.create_pool(**cfg)
 
             elif driver == "pgsql":
                 import asyncpg
                 return await asyncpg.create_pool(target_url, min_size=5, max_size=kwargs.get("maxsize", 50))
-
             elif driver == "sqlite":
                 import aiosqlite
                 path = parsed.path.lstrip('/') or "suite.sqlite"
                 conn = await aiosqlite.connect(path, timeout=30, check_same_thread=False)
                 conn.row_factory = aiosqlite.Row
                 return conn
-
             elif driver == "libsql":
                 import libsql_client
                 token = getattr(self.settings, "DB_AUTH_TOKEN", None)
                 return libsql_client.create_client(target_url, auth_token=token)
-
             raise DatabaseConfigurationError(f"Unsupported raw driver for URL: {target_url}")
         except Exception as e:
             raise DatabaseConfigurationError(f"Failed to create raw pool for {target_url}", details=str(e))
