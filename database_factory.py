@@ -79,6 +79,7 @@ class BaseConnectionFactory:
 
                 if "check_same_thread" not in engine_kwargs["connect_args"]:
                     engine_kwargs["connect_args"]["check_same_thread"] = False
+                engine_kwargs.pop("connect_timeout", None)
             else:
                 engine_kwargs["pool_size"] = kwargs.get("pool_size", self.settings.DB_POOL_SIZE)
                 engine_kwargs["max_overflow"] = kwargs.get("max_overflow", 10)
