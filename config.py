@@ -31,3 +31,4 @@ class BaseInfraSettings(BaseSettings):
         extra="ignore",
         case_sensitive=True
     )
+
