@@ -34,6 +34,9 @@ class BaseConnectionFactory:
 
     async def get_engine(self, url: Optional[str] = None, **kwargs) -> Any:
         target_url = url or self.settings.DATABASE_URL
+        if target_url and "://" not in target_url:
+            if "." in target_url and not target_url.startswith("/"):
+               target_url = f"libsql://{target_url}"
         self._validate_url(target_url)
 
         if target_url in self._engines:
@@ -215,6 +218,18 @@ class BaseConnectionFactory:
             raise DatabaseConfigurationError(f"Unsupported raw driver for URL: {target_url}")
         except Exception as e:
             raise DatabaseConfigurationError(f"Failed to create raw pool for {target_url}", details=str(e))
+
+    async def dispose_engine(self, url: str):
+        async with self._lock:
+            if url in self._engines:
+                engine = self._engines.pop(url)
+                self._is_async.pop(url, None)
+                if hasattr(engine, "dispose"):
+                    if asyncio.iscoroutinefunction(engine.dispose):
+                        await engine.dispose()
+                    else:
+                        engine.dispose()
+                logger.info(f"[DatabaseFactory] Engine disposed for {url.split('@')[-1] if '@' in url else 'local db'}")
 
     async def close_all(self):
         async with self._lock:
